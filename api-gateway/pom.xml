@@ -8,7 +8,8 @@
     <parent>
         <groupId>com.platform</groupId>
         <artifactId>distributed-orchestration-platform</artifactId>
-        <version>1.0.0</version>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>api-gateway</artifactId>
