@@ -92,11 +92,11 @@
                 <classifier>http</classifier>
             </dependency>
 
-            <!-- Kafka -->
+            <!-- Spring Kafka (version managed by Spring Boot) -->
             <dependency>
                 <groupId>org.springframework.kafka</groupId>
                 <artifactId>spring-kafka</artifactId>
-                <version>${kafka.version}</version>
+                <!-- No version specified - Spring Boot 3.2.5 manages this (uses 3.1.x) -->
             </dependency>
 
             <!-- Redis & Distributed Locks -->
