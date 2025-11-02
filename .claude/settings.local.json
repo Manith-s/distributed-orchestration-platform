@@ -14,7 +14,11 @@
       "Bash(echo:*)",
       "Bash(done)",
       "Bash(nul)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(awk:*)",
+      "Bash(while read f)",
+      "Bash(do wc -l $f)",
+      "Bash(xargs kill:*)"
     ],
     "deny": [],
     "ask": []
