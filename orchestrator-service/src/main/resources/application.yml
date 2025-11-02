@@ -1,0 +1,75 @@
+spring:
+  application:
+    name: orchestrator-service
+
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:jobs_db}
+    username: postgres
+    password: ${POSTGRES_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+    consumer:
+      group-id: orchestrator-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      properties:
+        spring.json.trusted.packages: "*"
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:redis_password}
+
+server:
+  port: ${SERVER_PORT:8080}
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:MySecretKeyForJWTTokenGenerationThatIsLongEnough12345}
+  expiration: ${JWT_EXPIRATION:86400000}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+orchestrator:
+  scheduling:
+    interval: 5000  # 5 seconds
+  retry:
+    interval: 30000  # 30 seconds
+    initial-backoff: 2000  # 2 seconds
+    max-backoff: 3600000  # 1 hour
+  kafka:
+    topics:
+      job-tasks: job.tasks
+      job-results: job.results
+
+logging:
+  level:
+    com.platform: INFO
+    org.springframework.kafka: WARN

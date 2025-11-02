@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: log-aggregator-service
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: log-aggregator-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      properties:
+        spring.json.trusted.packages: "*"
+
+server:
+  port: 8084
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+
+clickhouse:
+  url: jdbc:clickhouse://localhost:8123/logs_db
+  username: default
+  password: ""
+  batch-size: 1000
+  flush-interval: 5000  # 5 seconds
+
+logging:
+  level:
+    com.platform: INFO
+    org.springframework.kafka: WARN

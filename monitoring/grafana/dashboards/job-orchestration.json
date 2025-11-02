@@ -1,0 +1,103 @@
+{
+  "dashboard": {
+    "title": "Job Orchestration Dashboard",
+    "tags": ["jobs", "orchestration"],
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "panels": [
+      {
+        "id": 1,
+        "title": "Jobs Submitted (Rate)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "rate(jobs_submitted_total[5m])",
+            "legendFormat": "Submissions/sec"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Job Success vs Failure Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "rate(jobs_completed_total{success=\"true\"}[5m])",
+            "legendFormat": "Success"
+          },
+          {
+            "expr": "rate(jobs_completed_total{success=\"false\"}[5m])",
+            "legendFormat": "Failure"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Job Execution Time (p95)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(jobs_execution_time_bucket[5m]))",
+            "legendFormat": "p95 latency"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Jobs by Status",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "jobs_by_status{status=\"PENDING\"}",
+            "legendFormat": "Pending"
+          },
+          {
+            "expr": "jobs_by_status{status=\"RUNNING\"}",
+            "legendFormat": "Running"
+          },
+          {
+            "expr": "jobs_by_status{status=\"COMPLETED\"}",
+            "legendFormat": "Completed"
+          },
+          {
+            "expr": "jobs_by_status{status=\"FAILED\"}",
+            "legendFormat": "Failed"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Active Workers",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 16},
+        "targets": [
+          {
+            "expr": "count(up{job=\"worker-service\"} == 1)",
+            "legendFormat": "Active Workers"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Total Jobs",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 16},
+        "targets": [
+          {
+            "expr": "jobs_total",
+            "legendFormat": "Total"
+          }
+        ]
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "refresh": "10s"
+  }
+}

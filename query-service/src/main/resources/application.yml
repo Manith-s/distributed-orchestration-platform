@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: query-service
+
+server:
+  port: 8085
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+
+clickhouse:
+  url: jdbc:clickhouse://localhost:8123/logs_db
+  username: default
+  password: ${CLICKHOUSE_PASSWORD:}
+
+logging:
+  level:
+    com.platform: INFO

@@ -1,0 +1,219 @@
+version: '3.8'
+
+services:
+  # PostgreSQL - Primary database for job state and metadata
+  postgres:
+    image: postgres:15-alpine
+    container_name: orchestration-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-jobs_db}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - orchestration-network
+    restart: unless-stopped
+
+  # ClickHouse - High-performance analytics database for logs and metrics
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: orchestration-clickhouse
+    environment:
+      CLICKHOUSE_DB: logs_db
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-}
+    ports:
+      - "8123:8123"  # HTTP interface
+      - "9000:9000"  # Native client
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - ./scripts/clickhouse-init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "localhost:8123/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - orchestration-network
+    restart: unless-stopped
+
+  # Zookeeper - Required for Kafka cluster coordination
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: orchestration-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_SYNC_LIMIT: 2
+    ports:
+      - "2181:2181"
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+      - zookeeper_logs:/var/lib/zookeeper/log
+    healthcheck:
+      test: ["CMD-SHELL", "echo ruok | nc localhost 2181 | grep imok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - orchestration-network
+    restart: unless-stopped
+
+  # Kafka - Distributed message queue for job distribution and log streaming
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: orchestration-kafka
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_LOG_RETENTION_HOURS: 168  # 7 days
+      KAFKA_LOG_SEGMENT_BYTES: 1073741824  # 1GB
+      KAFKA_NUM_PARTITIONS: 3  # Default partitions for new topics
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - orchestration-network
+    restart: unless-stopped
+
+  # Kafka UI - Web interface for Kafka management
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: orchestration-kafka-ui
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+    ports:
+      - "9001:8080"  # Changed from 8080:8080 to avoid conflict with orchestrator-service
+    networks:
+      - orchestration-network
+    restart: unless-stopped
+
+  # Redis - Distributed cache and locking mechanism
+  redis:
+    image: redis:7-alpine
+    container_name: orchestration-redis
+    command: redis-server --requirepass ${REDIS_PASSWORD:-redis_password}
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - orchestration-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Prometheus - Metrics collection and storage
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: orchestration-prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus_data:/prometheus
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "localhost:9090/-/healthy"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - orchestration-network
+    restart: unless-stopped
+
+  # Grafana - Metrics visualization and dashboards
+  grafana:
+    image: grafana/grafana:latest
+    container_name: orchestration-grafana
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SERVER_ROOT_URL: http://localhost:3000
+      GF_INSTALL_PLUGINS: redis-datasource
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - orchestration-network
+    restart: unless-stopped
+
+# Persistent volumes for data retention
+volumes:
+  postgres_data:
+    driver: local
+  clickhouse_data:
+    driver: local
+  zookeeper_data:
+    driver: local
+  zookeeper_logs:
+    driver: local
+  kafka_data:
+    driver: local
+  redis_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+# Custom bridge network for service communication
+networks:
+  orchestration-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16

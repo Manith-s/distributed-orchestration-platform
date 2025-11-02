@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(mvn clean install:*)",
+      "Bash(where:*)",
+      "Bash(dir:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(docker ps:*)",
+      "Bash(mvn clean compile:*)",
+      "Bash(for:*)",
+      "Bash(do python3 -c \"import json; json.load(open(''$f''))\")",
+      "Bash(echo:*)",
+      "Bash(done)",
+      "Bash(nul)",
+      "Bash(rm:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

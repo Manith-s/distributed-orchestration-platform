@@ -1,0 +1,50 @@
+spring:
+  application:
+    name: worker-service
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: worker-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      properties:
+        spring.json.trusted.packages: "*"
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: ${REDIS_PASSWORD:redis_password}
+
+server:
+  port: 8081
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+
+worker:
+  id: ${WORKER_ID:worker-1}
+  heartbeat:
+    interval: 10000  # 10 seconds
+  lock:
+    timeout: 300000  # 5 minutes
+  kafka:
+    topics:
+      job-tasks: job.tasks
+      job-results: job.results
+      job-logs: job.logs
+
+logging:
+  level:
+    com.platform: INFO
+    org.springframework.kafka: WARN

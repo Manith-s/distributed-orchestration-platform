@@ -1,0 +1,60 @@
+{
+  "dashboard": {
+    "title": "Log Analytics Dashboard",
+    "tags": ["logs", "analytics"],
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "panels": [
+      {
+        "id": 1,
+        "title": "Log Volume by Level",
+        "type": "piechart",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "sum by (level) (rate(log_entries_total[5m]))",
+            "legendFormat": "{{ level }}"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Error Rate Trend",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "rate(log_entries_total{level=\"ERROR\"}[5m])",
+            "legendFormat": "Errors/sec"
+          }
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {"params": [5], "type": "gt"},
+              "query": {"model": "A", "params": ["5m", "now"]},
+              "type": "query"
+            }
+          ]
+        }
+      },
+      {
+        "id": 3,
+        "title": "Logs by Service",
+        "type": "bargauge",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "sum by (service_name) (rate(log_entries_total[5m]))",
+            "legendFormat": "{{ service_name }}"
+          }
+        ]
+      }
+    ],
+    "time": {
+      "from": "now-3h",
+      "to": "now"
+    },
+    "refresh": "1m"
+  }
+}

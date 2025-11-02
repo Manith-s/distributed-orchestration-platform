@@ -1,0 +1,49 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+docs/
+LICENSE
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.iws
+.project
+.classpath
+.settings/
+
+# Build artifacts
+target/
+**/target/
+*.jar
+*.war
+*.ear
+
+# Test files
+**/src/test/
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+azure-pipelines.yml
+Jenkinsfile
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yml
+docker-compose.*.yml
+
+# Environment
+.env
+.env.*
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,85 @@
+groups:
+  - name: job_alerts
+    interval: 30s
+    rules:
+      # High failure rate
+      - alert: HighJobFailureRate
+        expr: |
+          (rate(jobs_failed_total[5m]) / rate(jobs_submitted_total[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High job failure rate detected"
+          description: "More than 10% of jobs are failing ({{ $value | humanizePercentage }})"
+
+      # Jobs stuck in queue
+      - alert: JobsStuckInQueue
+        expr: |
+          jobs_by_status{status="QUEUED"} > 100
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Too many jobs stuck in queue"
+          description: "{{ $value }} jobs have been queued for more than 10 minutes"
+
+      # No jobs being processed
+      - alert: NoJobsProcessed
+        expr: |
+          rate(jobs_completed_total[5m]) == 0
+        for: 15m
+        labels:
+          severity: critical
+        annotations:
+          summary: "No jobs are being processed"
+          description: "No jobs completed in the last 15 minutes"
+
+  - name: service_alerts
+    interval: 30s
+    rules:
+      # Service down
+      - alert: ServiceDown
+        expr: up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "{{ $labels.instance }} has been down for more than 2 minutes"
+
+      # High error rate
+      - alert: HighErrorRate
+        expr: |
+          rate(http_server_requests_seconds_count{status=~"5.."}[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate on {{ $labels.service }}"
+          description: "Service is returning {{ $value }} errors per second"
+
+  - name: infrastructure_alerts
+    interval: 30s
+    rules:
+      # Kafka lag
+      - alert: KafkaHighLag
+        expr: |
+          kafka_consumer_lag > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Kafka consumer lag"
+          description: "Consumer group has {{ $value }} messages lagging"
+
+      # Redis connection issues
+      - alert: RedisConnectionFailed
+        expr: |
+          redis_connected_clients == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis has no connected clients"
+          description: "Redis may be down or unreachable"

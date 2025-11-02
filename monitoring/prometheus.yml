@@ -1,0 +1,188 @@
+# =====================================================
+# Prometheus Configuration
+# Purpose: Metrics collection from all services
+# =====================================================
+
+global:
+  # How frequently to scrape targets
+  scrape_interval: 15s
+
+  # How long until a scrape request times out
+  scrape_timeout: 10s
+
+  # How frequently to evaluate rules
+  evaluation_interval: 15s
+
+  # External labels to add to all metrics
+  external_labels:
+    cluster: 'orchestration-platform'
+    environment: 'development'
+
+# Alertmanager configuration (optional - uncomment when needed)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets:
+#           - 'alertmanager:9093'
+
+# Rule files (for recording rules and alerts)
+rule_files:
+  - 'alerts.yml'
+
+# =====================================================
+# Scrape Configurations
+# =====================================================
+
+scrape_configs:
+  # ===================================================
+  # Prometheus Self-Monitoring
+  # ===================================================
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+
+  # ===================================================
+  # Orchestrator Service
+  # Coordinates job distribution and scheduling
+  # ===================================================
+  - job_name: 'orchestrator-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['host.docker.internal:8080']
+        labels:
+          service: 'orchestrator'
+          component: 'backend'
+
+  # ===================================================
+  # Worker Services (Multiple Instances)
+  # Execute distributed jobs
+  # ===================================================
+  - job_name: 'worker-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s
+    static_configs:
+      # Worker Instance 1
+      - targets: ['host.docker.internal:8081']
+        labels:
+          service: 'worker'
+          instance: 'worker-1'
+          component: 'backend'
+
+      # Worker Instance 2
+      - targets: ['host.docker.internal:8082']
+        labels:
+          service: 'worker'
+          instance: 'worker-2'
+          component: 'backend'
+
+      # Worker Instance 3
+      - targets: ['host.docker.internal:8083']
+        labels:
+          service: 'worker'
+          instance: 'worker-3'
+          component: 'backend'
+
+  # ===================================================
+  # Log Aggregator Service
+  # Ingests logs from Kafka and stores in ClickHouse
+  # ===================================================
+  - job_name: 'log-aggregator-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['host.docker.internal:8084']
+        labels:
+          service: 'log-aggregator'
+          component: 'backend'
+
+  # ===================================================
+  # Query Service
+  # Provides search and analytics API
+  # ===================================================
+  - job_name: 'query-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['host.docker.internal:8085']
+        labels:
+          service: 'query-service'
+          component: 'backend'
+
+  # ===================================================
+  # API Gateway
+  # Routes requests and handles rate limiting
+  # ===================================================
+  - job_name: 'api-gateway'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['host.docker.internal:8086']
+        labels:
+          service: 'api-gateway'
+          component: 'gateway'
+
+  # ===================================================
+  # Infrastructure Services
+  # ===================================================
+
+  # PostgreSQL Exporter
+  - job_name: 'postgres'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+        labels:
+          service: 'postgresql'
+          component: 'database'
+
+  # Redis Exporter
+  - job_name: 'redis'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['redis-exporter:9121']
+        labels:
+          service: 'redis'
+          component: 'cache'
+
+  # Kafka Exporter
+  - job_name: 'kafka'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['kafka-exporter:9308']
+        labels:
+          service: 'kafka'
+          component: 'messaging'
+
+  # ClickHouse Exporter
+  - job_name: 'clickhouse'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['clickhouse-exporter:9116']
+        labels:
+          service: 'clickhouse'
+          component: 'analytics-db'
+
+# =====================================================
+# Remote Write Configuration (Optional)
+# For long-term storage or federation
+# =====================================================
+
+# remote_write:
+#   - url: 'http://remote-prometheus:9090/api/v1/write'
+#     queue_config:
+#       capacity: 10000
+#       max_shards: 5
+#       min_shards: 1
+#       max_samples_per_send: 2000
+#       batch_send_deadline: 5s
+
+# =====================================================
+# Remote Read Configuration (Optional)
+# For querying historical data from remote storage
+# =====================================================
+
+# remote_read:
+#   - url: 'http://remote-prometheus:9090/api/v1/read'
+#     read_recent: true

@@ -1,0 +1,87 @@
+{
+  "dashboard": {
+    "title": "System Health Dashboard",
+    "tags": ["health", "monitoring"],
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "panels": [
+      {
+        "id": 1,
+        "title": "Service Uptime",
+        "type": "stat",
+        "gridPos": {"h": 6, "w": 24, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "up",
+            "legendFormat": "{{ job }} - {{ instance }}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {"value": 0, "text": "DOWN", "color": "red"},
+              {"value": 1, "text": "UP", "color": "green"}
+            ]
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "CPU Usage",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 6},
+        "targets": [
+          {
+            "expr": "process_cpu_usage{job=~\".*-service\"}",
+            "legendFormat": "{{ service }}"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Memory Usage",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 6},
+        "targets": [
+          {
+            "expr": "jvm_memory_used_bytes{job=~\".*-service\"} / jvm_memory_max_bytes",
+            "legendFormat": "{{ service }}"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "HTTP Request Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 14},
+        "targets": [
+          {
+            "expr": "rate(http_server_requests_seconds_count[5m])",
+            "legendFormat": "{{ service }} - {{ method }} {{ uri }}"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Database Connections",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 14},
+        "targets": [
+          {
+            "expr": "hikaricp_connections_active",
+            "legendFormat": "Active - {{ pool }}"
+          },
+          {
+            "expr": "hikaricp_connections_idle",
+            "legendFormat": "Idle - {{ pool }}"
+          }
+        ]
+      }
+    ],
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "refresh": "30s"
+  }
+}
