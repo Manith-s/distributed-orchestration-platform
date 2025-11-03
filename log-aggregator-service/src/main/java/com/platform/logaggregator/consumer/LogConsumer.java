@@ -20,12 +20,12 @@ public class LogConsumer {
         groupId = "log-aggregator-group",
         concurrency = "5"
     )
-    public void consumeLog(LogEntry log, Acknowledgment acknowledgment) {
+    public void consumeLog(LogEntry logEntry, Acknowledgment acknowledgment) {
         try {
-            log.trace("Received log: jobId={}, level={}", log.getJobId(), log.getLevel());
+            log.trace("Received log: jobId={}, level={}", logEntry.getJobId(), logEntry.getLevel());
 
             // Ingest log
-            ingestionService.ingest(log);
+            ingestionService.ingest(logEntry);
 
             // Acknowledge
             acknowledgment.acknowledge();

@@ -23,7 +23,7 @@ public class LogEnrichmentService {
      * Enrich log entry with additional metadata.
      */
     public LogEntry enrich(LogEntry log) {
-        Map<String, Object> metadata = new HashMap<>();
+        Map<String, String> metadata = new HashMap<>();
 
         // Add existing metadata
         if (log.getMetadata() != null) {

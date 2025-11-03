@@ -15,20 +15,20 @@ public class LogIngestionService {
     /**
      * Process incoming log entry.
      */
-    public void ingest(LogEntry log) {
+    public void ingest(LogEntry logEntry) {
         try {
             // Validate log
-            if (log == null || log.getMessage() == null) {
+            if (logEntry == null || logEntry.getMessage() == null) {
                 log.warn("Received invalid log entry, skipping");
                 return;
             }
 
             // Store log (will be batched and enriched)
-            storageService.storeLog(log);
+            storageService.storeLog(logEntry);
 
         } catch (Exception e) {
             log.error("Failed to ingest log: jobId={}",
-                log != null ? log.getJobId() : "null", e);
+                logEntry != null ? logEntry.getJobId() : "null", e);
         }
     }
 }
