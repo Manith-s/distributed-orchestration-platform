@@ -1,0 +1,8 @@
+spring:
+  cloud:
+    gateway:
+      routes: []
+
+logging:
+  level:
+    com.platform.gateway: DEBUG

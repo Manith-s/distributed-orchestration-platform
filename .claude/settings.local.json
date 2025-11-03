@@ -20,7 +20,13 @@
       "Bash(do wc -l $f)",
       "Bash(xargs kill:*)",
       "Bash(do echo \"[$module]\")",
-      "Bash(do echo \"### $module ###\")"
+      "Bash(do echo \"### $module ###\")",
+      "Bash(mvn dependency:resolve:*)",
+      "Bash(./mvnw clean compile test-compile:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(del .\\nul)",
+      "Bash(git config:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []
