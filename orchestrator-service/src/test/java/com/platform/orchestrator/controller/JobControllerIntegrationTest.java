@@ -6,6 +6,7 @@ import com.platform.orchestrator.dto.JobRequest;
 import com.platform.orchestrator.dto.JobResponse;
 import com.platform.orchestrator.service.JobService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -36,6 +37,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 @WebMvcTest(controllers = com.platform.orchestrator.controller.JobController.class)
 @Import({SecurityConfig.class})
 @ActiveProfiles("test")
+@Tag("integration")
 class JobControllerIntegrationTest {
 
     @Autowired

@@ -166,9 +166,8 @@
                     <includes>
                         <include>**/*Test.java</include>
                     </includes>
-                    <excludes>
-                        <exclude>**/integration/**/*Test.java</exclude>
-                    </excludes>
+                    <!-- Use JUnit 5 groups to exclude integration tests -->
+                    <groups>!integration</groups>
                 </configuration>
             </plugin>
 
