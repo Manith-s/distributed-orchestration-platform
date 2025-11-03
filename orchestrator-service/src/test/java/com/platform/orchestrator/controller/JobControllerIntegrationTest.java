@@ -26,9 +26,17 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.kafka.test.context.EmbeddedKafka;
+import org.springframework.context.annotation.Import;
+import com.platform.orchestrator.config.TestRedisConfiguration;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@ActiveProfiles("test")
+@EmbeddedKafka(partitions = 1, topics = {"job.events", "job.logs"}, ports = {9092})
+@Import(TestRedisConfiguration.class)
 class JobControllerIntegrationTest {
 
     @Autowired
@@ -65,6 +73,7 @@ class JobControllerIntegrationTest {
     }
 
     @Test
+    @WithMockUser
     void submitJob_ValidRequest_ReturnsCreated() throws Exception {
         when(jobService.submitJob(any(JobRequest.class))).thenReturn(testJobResponse);
 
@@ -79,6 +88,7 @@ class JobControllerIntegrationTest {
     }
 
     @Test
+    @WithMockUser
     void submitJob_InvalidRequest_ReturnsBadRequest() throws Exception {
         JobRequest invalidRequest = new JobRequest();
         // Missing required fields
@@ -90,6 +100,7 @@ class JobControllerIntegrationTest {
     }
 
     @Test
+    @WithMockUser
     void getJob_ExistingJob_ReturnsJob() throws Exception {
         when(jobService.getJob(testJobId)).thenReturn(testJobResponse);
 
@@ -101,6 +112,7 @@ class JobControllerIntegrationTest {
     }
 
     @Test
+    @WithMockUser
     void getJob_NonExistingJob_ReturnsNotFound() throws Exception {
         UUID nonExistingId = UUID.randomUUID();
         when(jobService.getJob(nonExistingId))
@@ -111,6 +123,7 @@ class JobControllerIntegrationTest {
     }
 
     @Test
+    @WithMockUser
     void listJobs_NoFilters_ReturnsPagedJobs() throws Exception {
         List<JobResponse> jobs = Arrays.asList(testJobResponse);
         Page<JobResponse> page = new PageImpl<>(jobs, PageRequest.of(0, 20), 1);
@@ -125,6 +138,7 @@ class JobControllerIntegrationTest {
     }
 
     @Test
+    @WithMockUser
     void listJobs_WithStatusFilter_ReturnsFilteredJobs() throws Exception {
         List<JobResponse> jobs = Arrays.asList(testJobResponse);
         Page<JobResponse> page = new PageImpl<>(jobs, PageRequest.of(0, 20), 1);
@@ -139,6 +153,7 @@ class JobControllerIntegrationTest {
     }
 
     @Test
+    @WithMockUser
     void listJobs_WithTypeFilter_ReturnsFilteredJobs() throws Exception {
         List<JobResponse> jobs = Arrays.asList(testJobResponse);
         Page<JobResponse> page = new PageImpl<>(jobs, PageRequest.of(0, 20), 1);
@@ -153,6 +168,7 @@ class JobControllerIntegrationTest {
     }
 
     @Test
+    @WithMockUser
     void getStatistics_ReturnsStats() throws Exception {
         Map<String, Long> stats = new HashMap<>();
         stats.put("PENDING", 5L);
@@ -171,6 +187,7 @@ class JobControllerIntegrationTest {
     }
 
     @Test
+    @WithMockUser
     void listJobs_WithPagination_ReturnsCorrectPage() throws Exception {
         List<JobResponse> jobs = Arrays.asList(testJobResponse);
         Page<JobResponse> page = new PageImpl<>(jobs, PageRequest.of(1, 10), 25);
