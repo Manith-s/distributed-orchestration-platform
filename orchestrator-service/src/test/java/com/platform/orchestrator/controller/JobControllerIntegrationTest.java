@@ -8,14 +8,18 @@ import com.platform.orchestrator.service.JobService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.context.annotation.Import;
+import com.platform.orchestrator.security.SecurityConfig;
+import com.platform.orchestrator.security.JwtUtil;
+import com.platform.orchestrator.security.JwtRequestFilter;
+import org.springframework.security.core.userdetails.UserDetailsService;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -28,15 +32,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.kafka.test.context.EmbeddedKafka;
-import org.springframework.context.annotation.Import;
-import com.platform.orchestrator.config.TestRedisConfiguration;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@WebMvcTest(controllers = com.platform.orchestrator.controller.JobController.class)
+@Import({SecurityConfig.class})
 @ActiveProfiles("test")
-@EmbeddedKafka(partitions = 1, topics = {"job.events", "job.logs"}, ports = {9092})
-@Import(TestRedisConfiguration.class)
 class JobControllerIntegrationTest {
 
     @Autowired
@@ -47,6 +46,15 @@ class JobControllerIntegrationTest {
 
     @MockBean
     private JobService jobService;
+
+    @MockBean
+    private JwtUtil jwtUtil;
+
+    @MockBean
+    private JwtRequestFilter jwtRequestFilter;
+
+    @MockBean
+    private UserDetailsService userDetailsService;
 
     private UUID testJobId;
     private JobRequest testJobRequest;
