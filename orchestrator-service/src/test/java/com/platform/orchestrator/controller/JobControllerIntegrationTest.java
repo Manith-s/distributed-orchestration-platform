@@ -49,15 +49,16 @@ class JobControllerIntegrationTest {
         testJobId = UUID.randomUUID();
 
         testJobRequest = new JobRequest();
-        testJobRequest.setJobType("TEST_JOB");
+        testJobRequest.setName("Test Job");
+        testJobRequest.setType("EMAIL");
         testJobRequest.setPriority(5);
         testJobRequest.setMaxRetries(3);
-        testJobRequest.setTimeoutSeconds(300);
-        testJobRequest.setPayload(Map.of("key", "value"));
+        testJobRequest.setPayload("{\"key\":\"value\"}");
 
         testJobResponse = new JobResponse();
-        testJobResponse.setJobId(testJobId);
-        testJobResponse.setJobType("TEST_JOB");
+        testJobResponse.setId(testJobId);
+        testJobResponse.setName("Test Job");
+        testJobResponse.setType("EMAIL");
         testJobResponse.setStatus(JobStatus.PENDING);
         testJobResponse.setPriority(5);
         testJobResponse.setCreatedAt(LocalDateTime.now());
@@ -71,8 +72,8 @@ class JobControllerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(testJobRequest)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.jobId").value(testJobId.toString()))
-                .andExpect(jsonPath("$.jobType").value("TEST_JOB"))
+                .andExpect(jsonPath("$.id").value(testJobId.toString()))
+                .andExpect(jsonPath("$.type").value("EMAIL"))
                 .andExpect(jsonPath("$.status").value("PENDING"))
                 .andExpect(jsonPath("$.priority").value(5));
     }
@@ -94,8 +95,8 @@ class JobControllerIntegrationTest {
 
         mockMvc.perform(get("/api/v1/jobs/{jobId}", testJobId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.jobId").value(testJobId.toString()))
-                .andExpect(jsonPath("$.jobType").value("TEST_JOB"))
+                .andExpect(jsonPath("$.id").value(testJobId.toString()))
+                .andExpect(jsonPath("$.type").value("EMAIL"))
                 .andExpect(jsonPath("$.status").value("PENDING"));
     }
 
@@ -119,7 +120,7 @@ class JobControllerIntegrationTest {
         mockMvc.perform(get("/api/v1/jobs"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", hasSize(1)))
-                .andExpect(jsonPath("$.content[0].jobId").value(testJobId.toString()))
+                .andExpect(jsonPath("$.content[0].id").value(testJobId.toString()))
                 .andExpect(jsonPath("$.totalElements").value(1));
     }
 
@@ -142,13 +143,13 @@ class JobControllerIntegrationTest {
         List<JobResponse> jobs = Arrays.asList(testJobResponse);
         Page<JobResponse> page = new PageImpl<>(jobs, PageRequest.of(0, 20), 1);
 
-        when(jobService.listJobs(eq(null), eq("TEST_JOB"), any())).thenReturn(page);
+        when(jobService.listJobs(eq(null), eq("EMAIL"), any())).thenReturn(page);
 
         mockMvc.perform(get("/api/v1/jobs")
-                .param("type", "TEST_JOB"))
+                .param("type", "EMAIL"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", hasSize(1)))
-                .andExpect(jsonPath("$.content[0].jobType").value("TEST_JOB"));
+                .andExpect(jsonPath("$.content[0].type").value("EMAIL"));
     }
 
     @Test

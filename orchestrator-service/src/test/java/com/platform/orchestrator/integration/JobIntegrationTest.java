@@ -154,12 +154,12 @@ class JobIntegrationTest {
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getJobId()).isNotNull();
+        assertThat(response.getBody().getId()).isNotNull();
         assertThat(response.getBody().getStatus()).isEqualTo(JobStatus.PENDING);
         assertThat(response.getBody().getName()).isEqualTo("Test Email Job");
 
         // Verify job is saved in database
-        Job savedJob = jobRepository.findById(UUID.fromString(response.getBody().getJobId())).orElse(null);
+        Job savedJob = jobRepository.findById(response.getBody().getId()).orElse(null);
         assertThat(savedJob).isNotNull();
         assertThat(savedJob.getName()).isEqualTo("Test Email Job");
     }
@@ -215,7 +215,7 @@ class JobIntegrationTest {
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getJobId()).isEqualTo(job.getId().toString());
+        assertThat(response.getBody().getId()).isEqualTo(job.getId());
         assertThat(response.getBody().getName()).isEqualTo("Retrieve Test Job");
     }
 
