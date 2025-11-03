@@ -2,7 +2,15 @@ spring:
   cloud:
     gateway:
       routes: []
+      discovery:
+        locator:
+          enabled: false
+
+  autoconfigure:
+    exclude:
+      - org.springframework.cloud.gateway.config.GatewayRedisAutoConfiguration
 
 logging:
   level:
-    com.platform.gateway: DEBUG
+    com.platform: WARN
+    org.springframework: WARN

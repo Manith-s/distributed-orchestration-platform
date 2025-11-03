@@ -1,16 +1,17 @@
 spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+
   kafka:
-    bootstrap-servers: localhost:9092
-    consumer:
-      group-id: test-group
-      auto-offset-reset: earliest
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-  redis:
-    host: localhost
-    port: 6379
+    enabled: false
+
+  data:
+    redis:
+      enabled: false
 
 logging:
   level:
-    com.platform.worker: DEBUG
+    com.platform: WARN
+    org.springframework: WARN

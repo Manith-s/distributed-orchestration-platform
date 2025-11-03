@@ -162,12 +162,10 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
                 <configuration>
-                    <includes>
-                        <include>**/*Test.java</include>
-                    </includes>
-                    <!-- Use JUnit 5 groups to exclude integration tests -->
-                    <groups>!integration</groups>
+                    <excludedGroups>integration</excludedGroups>
+                    <skipTests>${skipTests}</skipTests>
                 </configuration>
             </plugin>
 
